@@ -1,11 +1,15 @@
 import { ConfigService } from '@nestjs/config';
-import { parseUserDefinedFields } from 'common/helpers/helpers';
+// import { parseUserDefinedFields } from 'common/helpers/helpers';
 import { PaymentStrategy } from 'src/payment/strategy/payment.strategy';
 import * as jwt from 'jsonwebtoken';
+import { HttpCustomService } from 'src/providers/http/http-custom.service';
 export class TwoCTwoPStrategy implements PaymentStrategy {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpCustomService: HttpCustomService,
+  ) {}
 
-  init(data: any): string {
+  async init(data: any): Promise<any> {
     console.log('2C2P payment strategy');
 
     const config = this.configService.get('twoCTwoP');
@@ -17,32 +21,8 @@ export class TwoCTwoPStrategy implements PaymentStrategy {
     const paymentDescription = data.paymentDescription || 'Payment for order';
     const frontendReturnUrl = data.frontendUrl;
     const backendReturnUrl = data.backendUrl;
-    const userDefined = parseUserDefinedFields(data.userDefined);
-    const nonceStr = data.merchantRefId;
-
-    // Optional Parameters
-    const paymentChannel = '';
-    const promotion = '';
-    const tokenize = '';
-    const cardTokens = '';
-    const tokenizeOnly = '';
-    const interestType = '';
-    const installmentPeriodFilter = '';
-    const productCode = '';
-    const recurring = '';
-    const invoicePrefix = '';
-    const recurringAmount = '';
-    const allowAccumulate = '';
-    const maxAccumulateAmount = '';
-    const recurringInterval = '';
-    const recurringCount = '';
-    const chargeNextDate = '';
-    const chargeOnDate = '';
-    const paymentExpiry = '';
-    const paymentRouteID = '';
-    const statementDescriptor = '';
-    const subMerchants = '';
-    const locale = '';
+    // const userDefined = parseUserDefinedFields(data.userDefined);
+    // const nonceStr = data.merchantRefId;
 
     const payload = {
       // MANDATORY PARAMS
@@ -50,39 +30,15 @@ export class TwoCTwoPStrategy implements PaymentStrategy {
       invoiceNo: data.invoiceId,
       description: paymentDescription,
       amount: data.amount,
-      currencyCode,
+      currencyCode: currencyCode,
+      frontendReturnUrl: frontendReturnUrl,
+      backendReturnUrl: backendReturnUrl,
 
-      // OPTIONAL PARAMS
-      paymentChannel,
-      promotion,
-      tokenize,
-      cardTokens,
-      tokenizeOnly,
-      interestType,
-      installmentPeriodFilter,
-      productCode,
-      recurring,
-      invoicePrefix,
-      recurringAmount,
-      allowAccumulate,
-      maxAccumulateAmount,
-      recurringInterval,
-      recurringCount,
-      chargeNextDate,
-      chargeOnDate,
-      paymentExpiry,
-      userDefined1: userDefined[0],
-      userDefined2: userDefined[1],
-      userDefined3: userDefined[2],
-      userDefined4: userDefined[3],
-      userDefined5: userDefined[4],
-      paymentRouteID,
-      statementDescriptor,
-      subMerchants,
-      locale,
-      frontendReturnUrl,
-      backendReturnUrl,
-      nonceStr,
+      // userDefined1: userDefined[0],
+      // userDefined2: userDefined[1],
+      // userDefined3: userDefined[2],
+      // userDefined4: userDefined[3],
+      // userDefined5: userDefined[4],
     };
 
     // Validate data before proceeding
@@ -90,7 +46,32 @@ export class TwoCTwoPStrategy implements PaymentStrategy {
 
     // Sign the JWT
     const token = jwt.sign(payload, secretKey, { algorithm: 'HS256' });
-    console.log(token);
+
+    try {
+      const response = await this.httpCustomService.getResponse(baseUrl, token);
+
+      if (response.data && response.data.payload) {
+        const jwtToken = response.data.payload;
+
+        const decodedPayload = jwt.verify(jwtToken, secretKey, {
+          algorithms: ['HS256'],
+        }) as any;
+
+        if (
+          decodedPayload.respDesc === 'Success' &&
+          decodedPayload.respCode === '0000'
+        ) {
+          return decodedPayload.webPaymentUrl;
+        } else {
+          throw new Error(decodedPayload.respDesc || 'Error.');
+        }
+      }
+      throw new Error(
+        'Something went wrong in requesting the payment screen for 2C2P',
+      );
+    } catch (error) {
+      throw new Error(`Error: ${error.message}`);
+    }
 
     return token;
   }

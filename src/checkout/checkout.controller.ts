@@ -28,7 +28,7 @@ export class CheckoutController {
     const currency = 'MMK';
     const frontendUrl = 'http://localhost:3000/checkout/payment-callback';
     const paymentDescription = 'Payment for test';
-    const userDefined = ['test1', 'test2'];
+    const userDefined = ['test1', 'test2', 'test3', 'test4', 'test5'];
 
     const data = {
       invoiceId,
@@ -42,7 +42,8 @@ export class CheckoutController {
     };
 
     this.paymentContext.setPaymentStrategy(paymentStrategy);
-    const result = this.paymentContext.initPayment(data);
+    const result = await this.paymentContext.initPayment(data);
+    console.log('result: ' + result);
 
     return result;
   }

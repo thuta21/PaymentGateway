@@ -4,7 +4,7 @@ export const twoCTwoPToken = 'twoCTwoP';
 
 export const TwoCTwoPConfig = registerAs(twoCTwoPToken, () => ({
   baseUrl:
-    process.env.TWOCTWOP_BASE_URL || 'https://sandbox-pgw.2c2p.com/payment/4.1',
+    process.env.TWOCTWOP_BASE_URL || 'https://sandbox-pgw.2c2p.com/payment/4.3',
   merchants: {
     default: 'MMK',
     MMK: {

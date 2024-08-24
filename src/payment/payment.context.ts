@@ -11,7 +11,8 @@ export class PaymentContext {
     this.paymentStrategy = paymentStrategy;
   }
 
-  initPayment(data: any) {
-    this.paymentStrategy.init(data);
+  async initPayment(data: any) {
+    const response = await this.paymentStrategy.init(data);
+    return response;
   }
 }

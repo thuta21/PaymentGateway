@@ -1,3 +1,3 @@
 export interface PaymentStrategy {
-  init(data: any): string;
+  init(data: any): Promise<any>;
 }
