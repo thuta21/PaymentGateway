@@ -1,0 +1,28 @@
+service: face-rekognition
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  timeout: 30
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'}
+
+functions:
+  main:
+    handler: src/lambda.handler
+    events:
+      - http:
+          method: any
+          path: /{any+}
+
+#custom:
+#  dotenv:
+#    path: .env
+#    logging: false
+#package:
+#  individually: true
+
