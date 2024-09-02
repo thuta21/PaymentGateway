@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-// import { parseUserDefinedFields } from 'common/helpers/helpers';
+import { parseUserDefinedFields } from 'common/helpers/helpers';
 import { PaymentStrategy } from 'src/payment/strategy/payment.strategy';
 import * as jwt from 'jsonwebtoken';
 import { HttpCustomService } from 'src/providers/http/http-custom.service';
@@ -10,33 +10,35 @@ export class TwoCTwoPStrategy implements PaymentStrategy {
   ) {}
 
   async init(data: any): Promise<any> {
-    console.log('2C2P payment strategy');
-
     const config = this.configService.get('twoCTwoP');
     const merchantConfig = config.merchants;
-    const currencyCode = data.currency || merchantConfig.default;
     const baseUrl = config.baseUrl;
+    const currencyCode = data.currency || merchantConfig.default;
     const merchantId = merchantConfig[currencyCode]?.merchantId;
     const secretKey = merchantConfig[currencyCode]?.secretKey;
+
+    const invoiceNo = data.invoiceId;
+    const amount = data.amount;
     const paymentDescription = data.paymentDescription || 'Payment for order';
-    const frontendReturnUrl = data.frontendUrl;
-    const backendReturnUrl = data.backendUrl;
-    // const userDefined = parseUserDefinedFields(data.userDefined);
+
+    const frontendReturnUrl = data.frontendReturnUrl;
+    const backendReturnUrl = 'http://localhost:3000/api/checkout/callback'; // it should be our backend url
+    const userDefined = parseUserDefinedFields(data.userDefined);
     // const nonceStr = data.merchantRefId;
 
     const payload = {
       // MANDATORY PARAMS
       merchantID: merchantId,
-      invoiceNo: data.invoiceId,
+      invoiceNo: invoiceNo,
       description: paymentDescription,
-      amount: data.amount,
+      amount: amount,
       currencyCode: currencyCode,
       frontendReturnUrl: frontendReturnUrl,
       backendReturnUrl: backendReturnUrl,
 
-      // userDefined1: userDefined[0],
-      // userDefined2: userDefined[1],
-      // userDefined3: userDefined[2],
+      userDefined1: userDefined[0],
+      userDefined2: userDefined[1],
+      userDefined3: userDefined[2],
       // userDefined4: userDefined[3],
       // userDefined5: userDefined[4],
     };
@@ -72,8 +74,6 @@ export class TwoCTwoPStrategy implements PaymentStrategy {
     } catch (error) {
       throw new Error(`Error: ${error.message}`);
     }
-
-    return token;
   }
 
   private validateData(
@@ -96,7 +96,7 @@ export class TwoCTwoPStrategy implements PaymentStrategy {
       console.log(error);
 
       throw new Error(
-        'Invalid backend URL, Be careful, this might lead to wrong data',
+        'Invalid backend URL, Be careful, this might lead to wrong data ',
       );
     }
   }

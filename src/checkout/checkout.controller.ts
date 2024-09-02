@@ -17,27 +17,28 @@ export class CheckoutController {
 
   @Post('/make-checkout')
   async makeCheckout(@Body() body: CheckoutDto) {
-    const paymentStrategy = this.paymentFactory.createStrategy(
-      body.payment_method,
-    );
+    // store api
+    // await this.checkoutService.storeCheckoutData(body);
 
-    const invoiceId = 'TEST123';
+    const applicationId = body.application_id;
+    const invoiceId = body.invoice_id;
     const amount = body.amount;
-    const merchantRefId = 'MarchantRefId123';
-    const backendUrl = 'http://localhost:3000/checkout/payment-callback';
-    const currency = 'MMK';
-    const frontendUrl = 'http://localhost:3000/checkout/payment-callback';
-    const paymentDescription = 'Payment for test';
-    const userDefined = ['test1', 'test2', 'test3', 'test4', 'test5'];
+    const paymentMethod = body.payment_method;
+    const paymentDescription = body.payment_description;
+    const currencyCode = body.currency_code;
+    const frontendReturnUrl = body.frontend_return_url;
+    const backendReturnUrl = body.backend_return_url;
+    const userDefined = [applicationId, paymentMethod, backendReturnUrl];
+
+    const paymentStrategy = this.paymentFactory.createStrategy(paymentMethod);
 
     const data = {
       invoiceId,
       amount,
-      merchantRefId,
-      backendUrl,
-      currency,
-      frontendUrl,
+      paymentMethod,
       paymentDescription,
+      currencyCode,
+      frontendReturnUrl,
       userDefined,
     };
 
@@ -46,5 +47,10 @@ export class CheckoutController {
     console.log('result: ' + result);
 
     return result;
+  }
+
+  @Post('/callback')
+  async callback(@Body() body: any) {
+    console.log('callback', body);
   }
 }
