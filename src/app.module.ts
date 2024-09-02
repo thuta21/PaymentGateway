@@ -5,6 +5,7 @@ import { PaymentModule } from './payment/payment.module';
 import { ProvidersModule } from './providers/providers.module';
 import { ApplicationModule } from './application/application.module';
 import config from 'config';
+import { DatabaseModule } from 'database/database.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import config from 'config';
       isGlobal: true,
       load: [...Object.values(config)],
     }),
+    DatabaseModule,
     PaymentModule,
     CheckoutModule,
     ProvidersModule,
